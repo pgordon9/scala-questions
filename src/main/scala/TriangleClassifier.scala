@@ -9,19 +9,20 @@ case class Equilateral(side1: Int, side2: Int, side3: Int) extends Triangle
 case class Scalene(side1: Int, side2: Int, side3: Int) extends Triangle
 
 object TriangleClassifier extends App {
-  type Sides = (Int, Int, Int)
-  private def atLeastTwoSidesEqual(t: Sides): Boolean = (t._1 == t._2 || t._2 == t._3 || t._1 == t._3)
+  case class Sides(s1: Int, s2:Int, s3:Int)
 
+  private def invalidSideValue(s: Any): Boolean = s match { case i: Int => i <= 0 }
+  private def atLeastTwoSidesEqual(t: Sides): Boolean = (t.s1 == t.s2 || t.s2 == t.s3 || t.s1 == t.s3)
+  private def invalidSideExists(t: Sides): Boolean = t.productIterator.exists(invalidSideValue)
 
-  private def allSidesEqual(t: Sides): Boolean = (t._1 == t._2 & t._2 == t._3)
-  private def invalidSides(t: Sides): Boolean = (t._1 <= 0 || t._2 <= 0 || t._3 <= 0)
+  def classify(t: (Int, Int, Int)): Triangle = {
+    val sides = Sides(t._1, t._2, t._3)
 
-  def classify(t: Sides): Triangle = {
-    t match {
-      case s: Sides if(invalidSides(s)) => throw new IllegalArgumentException("All sides must be greater than 0")
-      case s: Sides if(allSidesEqual(s)) => Equilateral(s._1, s._2, s._3)
-      case s: Sides if(atLeastTwoSidesEqual(s)) => Isosceles(s._1, s._2, s._3)
-      case _ => Scalene(t._1, t._2, t._3)
+    sides match {
+      case s: Sides if(invalidSideExists(s)) => throw new IllegalArgumentException("All sides must be greater than 0")
+      case Sides(s1, s2, s3) if(s1 == s2 & s2 == s3) => Equilateral(s1, s2, s3)
+      case s: Sides if(atLeastTwoSidesEqual(s)) => Isosceles(s.s1, s.s2, s.s3)
+      case _ => Scalene(sides.s1, sides.s2, sides.s3)
     }
   }
 }
